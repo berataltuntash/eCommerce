@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dao.CartDao;
 import com.example.demo.entity.Cart;
+import com.example.demo.entity.Login;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,96 +13,93 @@ import java.util.List;
 public class CartService {
     private final CartDao cartDao;
     private final ProductService productService;
+    private final LoginService loginService;
 
     @Autowired
-    public CartService(CartDao cartDao, ProductService productService) {
+    public CartService(CartDao cartDao, ProductService productService, LoginService loginService) {
         this.cartDao = cartDao;
         this.productService = productService;
+        this.loginService = loginService;
     }
 
-    public void addToCart(int productId, Integer userId){
-        List<Cart> cartlist = cartDao.findAll();
-        if(cartlist.size() == 0){
+    public void addToCart(int productId, int userId) {
+        if (userId == 0){
+            return;
+        }
+        List<Cart> cartList = cartDao.findAll();
+        Cart existingCartItem = findCartItemByProductAndUser(productId, userId);
+
+        if (existingCartItem != null) {
+            existingCartItem.setQuantity(existingCartItem.getQuantity() + 1);
+            cartDao.save(existingCartItem);
+        } else {
             Cart newCart = new Cart();
-            newCart.setProduct_id(productId);
-            newCart.setUser_id(userId);
+            newCart.setProduct(productService.getProductById(productId));
+            newCart.setUser(loginService.getLoginById(userId));
             newCart.setQuantity(1);
-            newCart.setPrice(productService.getProductById(productId).getPrice());
             cartDao.save(newCart);
         }
-        else {
-            for (int i = 0; i < cartlist.size(); i++) {
-                if (cartlist.get(i).getProduct_id() == productId && cartlist.get(i).getUser_id() == userId) {
-                    cartlist.get(i).setQuantity(cartlist.get(i).getQuantity() + 1);
-                    cartDao.save(cartlist.get(i));
-                    return;
-                }
-
-            }
-            Cart newCart = new Cart();
-            newCart.setProduct_id(productId);
-            newCart.setUser_id(userId);
-            newCart.setQuantity(1);
-            newCart.setPrice(productService.getProductById(productId).getPrice());
-            cartDao.save(newCart);
-            }
-        }
-
-    public void decrementFromCart(int productId, Integer userId){
-        List<Cart> cartlist = cartDao.findAll();
-        for (int i = 0 ; i<cartlist.size();i++){
-            if (cartlist.get(i).getProduct_id() == productId && cartlist.get(i).getUser_id() == userId){
-                if (cartlist.get(i).getQuantity() == 1){
-                    cartDao.deleteById(cartlist.get(i).getId());
-                }
-                else{
-                    cartlist.get(i).setQuantity(cartlist.get(i).getQuantity()-1);
-                    cartDao.save(cartlist.get(i));
-                }
-            }
-        }
     }
-    public void deleteFromCart(int productId, Integer userId){
-        List<Cart> cartlist = cartDao.findAll();
-        for (int i = 0 ; i<cartlist.size();i++) {
-            if (cartlist.get(i).getProduct_id() == productId && cartlist.get(i).getUser_id() == userId) {
-                    cartDao.deleteById(cartlist.get(i).getId());
+
+    private Cart findCartItemByProductAndUser(int productId, int userId) {
+        return cartDao.findByProduct_IdAndUser_Id(productId, userId);
+    }
+
+    public void decrementFromCart(int productId, int userId) {
+        Cart existingCartItem = findCartItemByProductAndUser(productId, userId);
+
+        if (existingCartItem != null) {
+            if (existingCartItem.getQuantity() == 1) {
+                cartDao.deleteById(existingCartItem.getId());
+            } else {
+                existingCartItem.setQuantity(existingCartItem.getQuantity() - 1);
+                cartDao.save(existingCartItem);
             }
         }
     }
 
-    public List<Cart> getUsersCart(Integer userId){
-        List<Cart> cartlist = cartDao.findAll();
+    public void deleteFromCart(int productId, int userId) {
+        Cart existingCartItem = findCartItemByProductAndUser(productId, userId);
+
+        if (existingCartItem != null) {
+            cartDao.deleteById(existingCartItem.getId());
+        }
+    }
+
+    public List<Cart> getUsersCart(Integer userId) {
+        if (userId == 0){
+            return new ArrayList<>();
+        }
+        Login user = loginService.getLoginById(userId);
+        List<Cart> allCarts = cartDao.findAll();
         List<Cart> usersCart = new ArrayList<>();
-        for (int i = 0 ; i<cartlist.size();i++) {
-            if (cartlist.get(i).getUser_id() == userId) {
-                usersCart.add(cartlist.get(i));
+
+        for (Cart cart : allCarts) {
+            if (cart.getUser().equals(user)) {
+                usersCart.add(cart);
             }
         }
+
         return usersCart;
     }
 
-    public void deleteUsersCart(Integer userId){
-        List<Cart> cartlist = cartDao.findAll();
-        for (int i = 0 ; i<cartlist.size();i++) {
-            if (cartlist.get(i).getUser_id() == userId) {
-                cartDao.deleteById(cartlist.get(i).getId());
-            }
-        }
-
+    public void deleteUsersCart(Integer userId) {
+        List<Cart> userCartItems = getUsersCart(userId);
+        cartDao.deleteAll(userCartItems);
     }
 
-    public void moveCart(int userid){
-        List<Cart> cartlist = cartDao.findAll();
-        if (cartlist.size() == 0){
-            return;
-        }
-        for (int i = 0 ; i<cartlist.size();i++) {
-            if (cartlist.get(i).getUser_id() == 0) {
-                cartlist.get(i).setUser_id(userid);
-                cartDao.save(cartlist.get(i));
+    public void moveCart(int userId) {
+        List<Cart> cartList = cartDao.findAll();
+        Login user = loginService.getLoginById(userId);
+
+        for (Cart cartItem : cartList) {
+            if (cartItem.getUser() == null) {
+                cartItem.setUser(user);
+                cartDao.save(cartItem);
             }
         }
     }
-
+    public Login getUserById(Integer userId) {
+        return loginService.getLoginById(userId);
+    }
 }

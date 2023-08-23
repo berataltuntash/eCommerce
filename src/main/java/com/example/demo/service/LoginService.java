@@ -79,4 +79,8 @@ public class LoginService {
         }
         return false;
     }
+
+    public Login getLoginById(int userId) {
+        return loginDao.findById(userId).orElse(null);
+    }
 }

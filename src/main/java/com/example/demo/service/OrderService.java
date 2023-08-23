@@ -2,9 +2,11 @@ package com.example.demo.service;
 import com.example.demo.dao.OrderDao;
 import com.example.demo.entity.Cart;
 import com.example.demo.entity.Order;
+import com.example.demo.entity.OrderItems;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,19 +21,31 @@ public class OrderService {
         this.cartService = cartService;
     }
 
-    public void saveOrder(int userid) {
-        List<Cart> newlist = cartService.getUsersCart(userid);
+    public void saveOrder(int userId) {
+        List<Cart> newlist = cartService.getUsersCart(userId);
+
         Order newOrder = new Order();
+        newOrder.setUser(cartService.getUserById(userId)); // Assuming cartService.getUserById(userId) retrieves the user
+        newOrder.setOrderId(orderid);
+
+        int totalPrice = 0;
         for (Cart cart : newlist) {
-            newOrder.setUser_id(cart.getUser_id());
-            newOrder.setOrder_id(orderid);
-            newOrder.setProduct_id(cart.getProduct_id());
-            newOrder.setQuantity(cart.getQuantity());
-            newOrder.setPrice(cart.getPrice() * cart.getQuantity());
-            orderDao.save(newOrder);
+            OrderItems orderItem = new OrderItems();
+            orderItem.setUser(cartService.getUserById(userId));
+            orderItem.setOrder(newOrder);
+            orderItem.setProduct(cart.getProduct());
+            orderItem.setQuantity(cart.getQuantity());
+            newOrder.getOrderItems().add(orderItem);
+
+            totalPrice += cart.getProduct().getPrice() * cart.getQuantity();
         }
+
+        newOrder.setTotalPrice(totalPrice);
+        newOrder.setDate(LocalDateTime.now().toString());
+        orderDao.save(newOrder);
+
         orderid += 1;
-        cartService.deleteUsersCart(userid);
+        cartService.deleteUsersCart(userId);
     }
 
     public List<Order> getAllOrders() {

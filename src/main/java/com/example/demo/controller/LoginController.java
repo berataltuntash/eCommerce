@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import com.example.demo.Requests.LoginRequest;
 import com.example.demo.Requests.SignupRequest;
-import com.example.demo.entity.Cart;
 import com.example.demo.service.CartService;
 import com.example.demo.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;

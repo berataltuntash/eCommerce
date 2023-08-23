@@ -34,15 +34,15 @@ public class CartController {
 
 
 
-    @DeleteMapping("/delete/{productId}")
-    public ResponseEntity<Void> deleteFromCart(@PathVariable("productId") int productId, @RequestParam Integer userId) {
-        cartService.deleteFromCart(productId, userId);
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteFromCart(@RequestBody CartRequest cartRequest) {
+        cartService.deleteFromCart(cartRequest.getProductId(), cartRequest.getUserId());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping("/decrement/{productId}")
-    public ResponseEntity<Void> decrementFromCart(@PathVariable("productId") int productId, @RequestParam Integer userId) {
-        cartService.decrementFromCart(productId, userId);
+    @DeleteMapping("/decrement")
+    public ResponseEntity<Void> decrementFromCart(@RequestBody CartRequest cartRequest) {
+        cartService.decrementFromCart(cartRequest.getProductId(), cartRequest.getUserId());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.Requests.LoginRequest;
 import com.example.demo.Requests.SignupRequest;
+import com.example.demo.entity.Login;
 import com.example.demo.service.CartService;
 import com.example.demo.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,11 @@ public class LoginController {
         this.cartService = cartService;
     }
 
-
+    @GetMapping
+    public ResponseEntity<Login> getLogin(@RequestParam int id){
+        Login theUser = loginService.getLoginById(id);
+        return new ResponseEntity<>(theUser,HttpStatus.OK);
+    }
     @PostMapping
     public ResponseEntity<Boolean> setLogin(@RequestBody SignupRequest signupRequest){
         Boolean theboolean = loginService.setLogin(signupRequest.getName(), signupRequest.getSurname(), signupRequest.getPassword(), signupRequest.getEmail());
@@ -42,4 +47,5 @@ public class LoginController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
 }

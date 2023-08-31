@@ -5,6 +5,7 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,7 +15,8 @@ public class FirebaseConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-        FileInputStream serviceAccount = new FileInputStream("/backend-53f0c-firebase-adminsdk-sxznj-c85384c852.json");
+
+        FileInputStream serviceAccount = new FileInputStream("/home/berat/Documents/demo/src/main/resources/firebase.json");
 
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -26,19 +28,9 @@ public class FirebaseConfig {
     public FirebaseMessaging firebaseMessaging(FirebaseApp firebaseApp) {
         return FirebaseMessaging.getInstance(firebaseApp);
     }
-
-    @Bean
-    public FirebaseApp firebaseApp(GoogleCredentials credentials) {
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(credentials)
-                .build();
-
-        return FirebaseApp.initializeApp(options);
-    }
-
     @Bean
     public GoogleCredentials googleCredentials() throws IOException {
-        FileInputStream serviceAccount = new FileInputStream("backend-53f0c-firebase-adminsdk-sxznj-c85384c852.json");
+        FileInputStream serviceAccount = new FileInputStream("/home/berat/Documents/demo/src/main/resources/firebase.json");
 
         return GoogleCredentials.fromStream(serviceAccount);
     }
